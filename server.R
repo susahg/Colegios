@@ -18,6 +18,24 @@ server <- shinyServer(function(input, output, session) {
       addMarkers(lng = ~LONGITUD, lat = ~ LATITUD, popup = ~as.character(NOMBRE), label = ~as.character(NOMBRE))
   })
   
+  output$mymap <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$Stamen.TonerLite,
+                       options = providerTileOptions(noWrap = TRUE)
+      ) %>%
+      addMarkers(data = points())
+  })
+   zipsInBounds <- reactive({
+    if (is.null(input$map_bounds))
+      return(zipdata[FALSE,])
+    bounds <- input$map_bounds
+    latRng <- range(bounds$north, bounds$south)
+    lngRng <- range(bounds$east, bounds$west)
+    
+    subset(zipdata,
+      latitude >= latRng[1] & latitude <= latRng[2] &
+        longitude >= lngRng[1] & longitude <= lngRng[2])
+  })
   
   output$x3 = downloadHandler('Mi-select.csv', content = function(file) {
     write.csv(filteredData(), file)
